@@ -4,8 +4,8 @@ Instead we can pipe the logs of Flux through this tool, which converts it to val
 
 Take a look at the log streams:
 
-- [before](./snapshots/fluxlogs-source.ndjson)
-- [after](./snapshots/fluxlog-TestSnapshot.ndjson)
+- [before](./.snapshots/fluxlogs-source.ndjson)
+- [after](./.snapshots/fluxlog-TestSnapshot.ndjson)
 
 ## Commands
 ```bash
