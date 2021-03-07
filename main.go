@@ -81,14 +81,11 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	}
 
 	var dynamicFields = mapslice.MapSlice{}
-	// Stable sorted keys in JSON output (for snapshot testability)
-	var ks = keys(dst)
-	sort.Strings(ks)
-	for _, k := range ks {
+	mapSortedForEach(dst, func(k string, value interface{}) {
 		if k != "ts" && k != "caller" {
-			dynamicFields = append(dynamicFields, mapslice.MapItem{Key: k, Value: dst[k]})
+			dynamicFields = append(dynamicFields, mapslice.MapItem{Key: k, Value: value})
 		}
-	}
+	})
 
 	// Output log according to Google LogEntry/Stackdriver specs
 	fields := append(mapslice.MapSlice{
@@ -125,9 +122,18 @@ func keys(m map[string]interface{}) (result []string) {
 	return
 }
 
+// Stable sorting (for snapshot testability)
+func mapSortedForEach(m map[string]interface{}, fn func(key string, value interface{})) {
+	var ks = keys(m)
+	sort.Strings(ks)
+	for _, k := range ks {
+		fn(k, m[k])
+	}
+}
+
 func queryFormat(m map[string]interface{}) string {
 	b := strings.Builder{}
-	for k, v := range m {
+	mapSortedForEach(m, func(k string, v interface{}) {
 		if strValue, isString := v.(string); k != "ts" && k != "caller" && isString {
 			if b.Len() > 0 {
 				b.WriteString(" ")
@@ -136,7 +142,7 @@ func queryFormat(m map[string]interface{}) string {
 			b.WriteString(`=`)
 			b.WriteString(strconv.Quote(strValue))
 		}
-	}
+	})
 	return b.String()
 }
 
