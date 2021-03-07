@@ -89,14 +89,18 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 		mapslice.MapItem{Key: "severity", Value: severity},
 		mapslice.MapItem{Key: "timestamp", Value: dst["ts"]},
 		mapslice.MapItem{Key: "message", Value: message},
-		mapslice.MapItem{Key: "logging.googleapis.com/sourceLocation", Value: parseCaller(dst["caller"].(string))},
+		mapslice.MapItem{Key: "logging.googleapis.com/sourceLocation", Value: parseCaller(dst["caller"])},
 		mapslice.MapItem{Key: "serviceContext", Value: serviceContext{"fluxcd"}},
 	}, dynamicFields...))
 	return append(result, '\r', '\n'), err
 }
 
-func parseCaller(c string) sourceLocation {
-	parts := strings.SplitN(c, ":", 2)
+func parseCaller(c interface{}) sourceLocation {
+	caller, isString := c.(string)
+	if !isString {
+		return sourceLocation{}
+	}
+	parts := strings.SplitN(caller, ":", 2)
 	if len(parts) < 2 {
 		return sourceLocation{}
 	}
