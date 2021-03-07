@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/mickep76/mapslice-json"
@@ -60,7 +61,10 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	// { "info": "some info" }
 	var hasField bool
 	var m interface{}
-	if m, hasField = dst["err"]; hasField {
+	if m, hasField = dst["warn"]; hasField {
+		severity = "WARNING"
+		message, _ = m.(string)
+	} else if m, hasField = dst["err"]; hasField {
 		severity = "ERROR"
 		message, _ = m.(string)
 	} else if m, hasField = dst["msg"]; hasField {
@@ -72,6 +76,8 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	} else if m, hasField = dst["output"]; hasField {
 		severity = "INFO"
 		message, _ = m.(string)
+	} else {
+		message = queryFormat(dst)
 	}
 
 	var dynamicFields = mapslice.MapSlice{}
@@ -79,7 +85,7 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	var ks = keys(dst)
 	sort.Strings(ks)
 	for _, k := range ks {
-		if k != "ts" {
+		if k != "ts" && k != "caller" {
 			dynamicFields = append(dynamicFields, mapslice.MapItem{Key: k, Value: dst[k]})
 		}
 	}
@@ -117,6 +123,21 @@ func keys(m map[string]interface{}) (result []string) {
 		result = append(result, k)
 	}
 	return
+}
+
+func queryFormat(m map[string]interface{}) string {
+	b := strings.Builder{}
+	for k, v := range m {
+		if strValue, isString := v.(string); k != "ts" && k != "caller" && isString {
+			if b.Len() > 0 {
+				b.WriteString(" ")
+			}
+			b.WriteString(k)
+			b.WriteString(`=`)
+			b.WriteString(strconv.Quote(strValue))
+		}
+	}
+	return b.String()
 }
 
 type sourceLocation struct {
