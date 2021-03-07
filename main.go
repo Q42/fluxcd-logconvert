@@ -60,22 +60,16 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	// { "msg": "some info" }
 	// { "info": "some info" }
 	var hasField bool
-	var m interface{}
-	if m, hasField = dst["warn"]; hasField {
+	if message, hasField = dst["warn"].(string); hasField {
 		severity = "WARNING"
-		message, _ = m.(string)
-	} else if m, hasField = dst["err"]; hasField {
+	} else if message, hasField = dst["err"].(string); hasField {
 		severity = "ERROR"
-		message, _ = m.(string)
-	} else if m, hasField = dst["msg"]; hasField {
+	} else if message, hasField = dst["msg"].(string); hasField {
 		severity = "INFO"
-		message, _ = m.(string)
-	} else if m, hasField = dst["info"]; hasField {
+	} else if message, hasField = dst["info"].(string); hasField {
 		severity = "INFO"
-		message, _ = m.(string)
-	} else if m, hasField = dst["output"]; hasField {
+	} else if message, hasField = dst["output"].(string); hasField {
 		severity = "INFO"
-		message, _ = m.(string)
 	} else {
 		message = queryFormat(dst)
 	}
