@@ -85,26 +85,31 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	}
 
 	// Output log according to Google LogEntry/Stackdriver specs
-	result, err = json.Marshal(append(mapslice.MapSlice{
+	fields := append(mapslice.MapSlice{
 		mapslice.MapItem{Key: "severity", Value: severity},
 		mapslice.MapItem{Key: "timestamp", Value: dst["ts"]},
 		mapslice.MapItem{Key: "message", Value: message},
-		mapslice.MapItem{Key: "logging.googleapis.com/sourceLocation", Value: parseCaller(dst["caller"])},
 		mapslice.MapItem{Key: "serviceContext", Value: serviceContext{"fluxcd"}},
-	}, dynamicFields...))
+	}, dynamicFields...)
+
+	if sourceLoc := parseCaller(dst["caller"]); sourceLoc.Key != nil {
+		fields = append(fields, sourceLoc)
+	}
+
+	result, err = json.Marshal(fields)
 	return append(result, '\r', '\n'), err
 }
 
-func parseCaller(c interface{}) sourceLocation {
+func parseCaller(c interface{}) mapslice.MapItem {
 	caller, isString := c.(string)
 	if !isString {
-		return sourceLocation{}
+		return mapslice.MapItem{Key: nil, Value: nil}
 	}
 	parts := strings.SplitN(caller, ":", 2)
 	if len(parts) < 2 {
-		return sourceLocation{}
+		return mapslice.MapItem{Key: nil, Value: nil}
 	}
-	return sourceLocation{parts[0], parts[1], "unknown"}
+	return mapslice.MapItem{Key: "logging.googleapis.com/sourceLocation", Value: sourceLocation{parts[0], parts[1], "unknown"}}
 }
 
 func keys(m map[string]interface{}) (result []string) {

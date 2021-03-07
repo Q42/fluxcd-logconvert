@@ -7,6 +7,20 @@ Take a look at the log streams:
 - [before](./.snapshots/fluxlogs-source.ndjson)
 - [after](./.snapshots/fluxlog-TestSnapshot.ndjson)
 
+## Examples
+
+```javascript
+// this debug log
+{ "somefield": "foo", "ts": "2021-03-06T21:14:44.870397172Z" }
+// becomes
+{"severity":"DEBUG","timestamp":"2021-03-06T21:14:44.870397172Z","message":"","serviceContext":{"service":"fluxcd"},"somefield":"foo"}
+
+// this error
+{ "err": "something went wrong", "test": "foo", "caller": "main.go:20" }
+// becomes
+{"severity":"ERROR","timestamp":null,"message":"something went wrong","serviceContext":{"service":"fluxcd"},"caller":"main.go:20","err":"something went wrong","test":"foo","logging.googleapis.com/sourceLocation":{"file":"main.go","line":"20","function":"unknown"}}
+```
+
 ## Commands
 ```bash
 go build ./
