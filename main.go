@@ -60,7 +60,9 @@ func convertFluxLogLine(data []byte) (result []byte, err error) {
 	// { "msg": "some info" }
 	// { "info": "some info" }
 	var hasField bool
-	if message, hasField = dst["warn"].(string); hasField {
+	if message, hasField = dst["warning"].(string); hasField {
+		severity = "WARNING"
+	} else if message, hasField = dst["warn"].(string); hasField {
 		severity = "WARNING"
 	} else if message, hasField = dst["err"].(string); hasField {
 		severity = "ERROR"
